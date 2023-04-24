@@ -20,9 +20,13 @@ class LoginController extends Controller
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
-            $questions = Question::with('user')->latest()->paginate(10);
-            return redirect()->route('index');
+            if(url()->previous() == "http://127.0.0.1:8000/login"){
+                $url = url(route('index'));
+                return response()->json(['url' => $url]);
+            }
+            return response()->json(['url' => url()->previous()]);
         }
+        return response()->json(['error_message' => 'Email hoặc mật khẩu không chính xác']);
     }
 
     public function destroy(Request $request)

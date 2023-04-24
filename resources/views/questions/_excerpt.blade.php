@@ -1,13 +1,15 @@
 <div class="media post">
     <div class="d-flex flex-column counters">
-        <div class="vote">
-            <strong>{{ $question->votes_count }}</strong> {{ str_plural('vote', $question->votes_count) }}
+        <div class="likes">
+            {{-- <strong>{{ $question->likes }}</strong> {{ str_plural('Lượt thích', $question->likes) }} --}}
+            <strong>{{ $question->likes_count }}</strong> Lượt thích
         </div>
-        <div class="status {{ $question->status }}">
-            <strong>{{ $question->answers_count }}</strong> {{ str_plural('answer', $question->answers_count) }}
+        <div class="answers">
+            {{-- <strong>{{ $question->answers_count }}</strong> {{ str_plural('Câu trả lời', $question->answers_count) }} --}}
+            <strong>{{ $question->answers_count }}</strong> Câu trả lời
         </div>
-        <div class="view">
-            {{ $question->views . " " . str_plural('view', $question->views) }}
+        <div class="views">
+            <strong>{{ $question->views}}</strong> Lượt xem
         </div>
     </div>
     <div class="media-body">
@@ -27,7 +29,7 @@
             </div>
         </div>
         <p class="lead">
-            Asked by
+            Tạo bởi
             <a href="{{ $question->user->url }}">{{ $question->user->name }}</a>
             <small class="text-muted">{{ $question->created_date }}</small>
         </p>

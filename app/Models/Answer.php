@@ -12,33 +12,43 @@ class Answer extends Model
 
     protected $appends = ['created_date', 'body_html', 'is_best'];
 
-    public function question()
-    {
-        return $this->belongsTo(Question::class);
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // public function getBodyHtmlAttribute()
-    // {
-    //     return clean(\Parsedown::instance()->text($this->body));
-    // }
-
-    public static function boot()
+    public function question()
     {
-        parent::boot();
-
-        static::created(function ($answer) {
-            $answer->question->increment('answers_count');
-        });
-
-        static::deleted(function ($answer) {
-            $answer->question->decrement('answers_count');
-        });
+        return $this->belongsTo(Question::class);
     }
+
+    public function replies()
+    {
+        return $this->hasMany(Answer::class, 'parent_id', 'id');
+    }
+
+    public function likes()
+    {
+        return $this->morphMany(Like::class, 'likeable');
+    }
+
+    public function getBodyHtmlAttribute()
+    {
+        return clean(\Parsedown::instance()->text($this->body));
+    }
+
+    // public static function boot()
+    // {
+    //     parent::boot();
+
+    //     static::created(function ($answer) {
+    //         $answer->question->increment('answers_count');
+    //     });
+
+    //     static::deleted(function ($answer) {
+    //         $answer->question->decrement('answers_count');
+    //     });
+    // }
 
     public function getCreatedDateAttribute()
     {
@@ -81,5 +91,24 @@ class Answer extends Model
     private function bodyHtml()
     {
         return \Parsedown::instance()->text($this->body);
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($answer) {
+            $answer->likes()->delete();
+        });
+    }
+
+    public function getLikesCountAttribute()
+    {
+        return $this->likes()->count();
+    }
+
+    public function getAnswersCountAttribute()
+    {
+        return $this->answers()->count();
     }
 }

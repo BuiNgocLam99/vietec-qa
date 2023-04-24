@@ -45,15 +45,20 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Question::class);
     }
 
+    public function answers()
+    {
+        return $this->hasMany(Answer::class);
+    }
+
+    public function likes()
+    {
+        return $this->hasMany(Like::class);
+    }
+
     public function getUrlAttribute()
     {
         // return route("questions.show", $this->id);
         return '#';
-    }
-
-    public function answers()
-    {
-        return $this->hasMany(Answer::class);
     }
 
     public function posts()
@@ -156,4 +161,9 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return $model->votes_count;
     }
+
+    // public function likeAnswer(Answer $answer)
+    // {
+    //     $this->answers();
+    // }
 }

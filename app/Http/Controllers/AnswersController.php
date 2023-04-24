@@ -28,12 +28,26 @@ class AnswersController extends Controller
      */
     public function store(Question $question, Request $request)
     {
-        $answer = $question->answers()->create($request->validate([
-            'parent_id' => 'numeric',
-            'body' => 'required'
-        ]) + ['user_id' => Auth::id()]);
+        if($request->parent_id){
+            $request->validate([
+                'parent_id' => 'numeric',
+            ]);
+        }
 
-        $returnHTML = view('answers.answers_question')->with('question', $question)->render();
+        $request->validate([
+            'body' => 'required',
+            'user_id' => 'numeric',
+        ]);
+
+        $question->answers()->create([
+            'parent_id' => $request->parent_id ? $request->parent_id : null,
+            'body' => $request->body,
+            'user_id' => Auth::id(),
+        ]);
+
+        $likedAnswers = auth()->user()->likes()->where('likeable_type', 'App\Models\Answer')->pluck('likeable_id')->toArray();
+
+        $returnHTML = view('answers.answers_question')->with(['question' => $question, 'likedAnswers' => $likedAnswers])->render();
         return response()->json([
             'html' => $returnHTML
         ]);
@@ -85,16 +99,25 @@ class AnswersController extends Controller
      */
     public function destroy(Question $question, Answer $answer)
     {
-        $this->authorize('delete', $answer);
-
+        // dd($answer);
+        // Answer::destroy($request->answer_id);
         $answer->delete();
+        $likedAnswers = auth()->user()->likes()->where('likeable_type', 'App\Models\Answer')->pluck('likeable_id')->toArray();
+        $returnHTML = view('answers.answers_question')->with(['question' => $question, 'likedAnswers' => $likedAnswers])->render();
+        return response()->json([
+            'html' => $returnHTML
+        ]);
 
-        if (request()->expectsJson()) {
-            return response()->json([
-                'message' => "Your answer has been removed"
-            ]);
-        }
+        // $this->authorize('delete', $answer);
 
-        return back()->with('success', "Your answer has been removed");
+        // $answer->delete();
+
+        // if (request()->expectsJson()) {
+        //     return response()->json([
+        //         'message' => "Your answer has been removed"
+        //     ]);
+        // }
+
+        // return back()->with('success', "Your answer has been removed");
     }
 }

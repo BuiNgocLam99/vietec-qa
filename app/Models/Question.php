@@ -13,8 +13,19 @@ class Question extends Model
 
     protected $appends = ['created_date', 'is_favorited', 'favorites_count', 'body_html'];
 
-    public function user() {
+    public function user() 
+    {
         return $this->belongsTo(User::class);
+    }
+
+    public function answers()
+    {
+        return $this->hasMany(Answer::class)->orderBy('votes_count', 'DESC');
+    }
+
+    public function likes()
+    {
+        return $this->morphMany(Like::class, 'likeable');
     }
 
     public function setTitleAttribute($value)
@@ -23,10 +34,10 @@ class Question extends Model
         $this->attributes['slug'] = Str::slug($value);
     }
 
-    // public function setBodyAttribute($value)
-    // {
-    //     $this->attributes['body'] = clen($value);
-    // }
+    public function setBodyAttribute($value)
+    {
+        $this->attributes['body'] = clean($value);
+    }
 
     public function getUrlAttribute()
     {
@@ -38,52 +49,47 @@ class Question extends Model
         return "";
     }
 
-    public function getStatusAttribute()
-    {
-        if ($this->answers_count > 0) {
-            if ($this->best_answer_id) {
-                return "answered-accepted";
-            }
-            return "answered";
-        }
-        return "unanswered";
-    }
+    // public function getStatusAttribute()
+    // {
+    //     if ($this->answers_count > 0) {
+    //         if ($this->best_answer_id) {
+    //             return "answered-accepted";
+    //         }
+    //         return "answered";
+    //     }
+    //     return "unanswered";
+    // }
 
     public function getBodyHtmlAttribute()
     {
         return clean($this->bodyHtml());
     }
 
-    public function answers()
-    {
-        return $this->hasMany(Answer::class)->orderBy('votes_count', 'DESC');
-    }
+    // public function acceptBestAnswer(Answer $answer)
+    // {
+    //     $this->best_answer_id = $answer->id;
+    //     $this->save();
+    // }
 
-    public function acceptBestAnswer(Answer $answer)
-    {
-        $this->best_answer_id = $answer->id;
-        $this->save();
-    }
+    // public function favorites()
+    // {
+    //     return $this->belongsToMany(User::class, 'favorites')->withTimestamps(); //, 'question_id', 'user_id');
+    // }
 
-    public function favorites()
-    {
-        return $this->belongsToMany(User::class, 'favorites')->withTimestamps(); //, 'question_id', 'user_id');
-    }
+    // public function isFavorited()
+    // {
+    //     return $this->favorites()->where('user_id', 1)->count() > 0;
+    // }
 
-    public function isFavorited()
-    {
-        return $this->favorites()->where('user_id', 1)->count() > 0;
-    }
+    // public function getIsFavoritedAttribute()
+    // {
+    //     return $this->isFavorited();
+    // }
 
-    public function getIsFavoritedAttribute()
-    {
-        return $this->isFavorited();
-    }
-
-    public function getFavoritesCountAttribute()
-    {
-        return $this->favorites->count();
-    }
+    // public function getFavoritesCountAttribute()
+    // {
+    //     return $this->favorites->count();
+    // }
 
     public function getExcerptAttribute()
     {
@@ -108,7 +114,37 @@ class Question extends Model
         );
     }
 
-    public function getRouteKeyName() {
-        return 'slug';
+    // -------------------------------------------- Đã sửa -------------------------------------------------
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($question) {
+            $question->likes()->delete();
+            $question->answers->each(function ($answer) {
+                $answer->likes()->delete();
+            });
+        });
     }
+
+    // Có thể bỏ
+    // public function getLikesCountAttribute()
+    // {
+    //     return $this->likes()->count();
+    // }
+
+    // public function getAnswersCountAttribute()
+    // {
+    //     return $this->answers()->count();
+    // }
+
+    // public function getViewsCountAttribute()
+    // {
+    //     $this->views->count();
+    // }
+
+    // public function getRouteKeyName() {
+    //     return 'slug';
+    // }
 }

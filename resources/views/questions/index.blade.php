@@ -7,9 +7,9 @@
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex align-items-center">
-                        <h2>All Questions</h2>
+                        <h2>Các câu hỏi</h2>
                         <div class="ml-auto">
-                            <a href="{{ route('questions.create') }}" class="btn btn-outline-secondary">Ask Question</a>
+                            <a href="{{ route('questions.create') }}" class="btn btn-outline-secondary">Tạo câu hỏi</a>
                         </div>
                     </div>
 
@@ -22,7 +22,7 @@
                         @include ('questions._excerpt')
                     @empty
                         <div class="alert alert-warning">
-                            <strong>Sorry</strong> There are no questions available.
+                            <strong>Xin lỗi</strong> Hiện tại không có câu trả lời nào.
                         </div>
                     @endforelse
 

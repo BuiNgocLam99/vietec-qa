@@ -19,7 +19,10 @@ class QuestionsController extends Controller
      */
     public function index()
     {
-        $questions = Question::with('user')->latest()->paginate(10);
+        $questions = Question::with('user')
+                           ->withCount('likes', 'answers')
+                           ->latest()
+                           ->paginate(10);
         return view('questions.index', compact('questions'));
     }
 
@@ -56,10 +59,29 @@ class QuestionsController extends Controller
      */
     public function show(Request $request)
     {
-        $question = Question::with('user', 'answers.user')->whereSlug($request->slug)->first();
+        $question = Question::with('user', 'answers.user.likes', 'answers.replies.user.likes', 'user.likes')
+                ->whereSlug($request->slug)
+                ->firstOrFail();
         $question->increment('views');
 
-        return view('questions.show', compact('question'));
+        $likedQuestions = $likedAnswers = [];
+        if (auth()->check()) {
+            $likedQuestions = auth()->user()->likes()->where('likeable_type', 'App\Models\Question')->pluck('likeable_id')->toArray();
+            $likedAnswers = auth()->user()->likes()->where('likeable_type', 'App\Models\Answer')->pluck('likeable_id')->toArray();
+        }
+
+        // Cách này ít hơn 1 câu query 
+        // if (auth()->check()) {
+        //     foreach ($question->likes as $like) {
+        //         if ($like->likeable_type === 'App\Models\Question') {
+        //             $likedQuestions[] = $like->likeable_id;
+        //         } elseif ($like->likeable_type === 'App\Models\Answer') {
+        //             $likedAnswers[] = $like->likeable_id;
+        //         }
+        //     }
+        // }
+        // dd($likedAnswers);        
+        return view('questions.show', compact('question', 'likedQuestions', 'likedAnswers'));
     }
 
     /**
@@ -81,11 +103,10 @@ class QuestionsController extends Controller
      * @param  \App\Question  $question
      * @return \Illuminate\Http\Response
      */
-    public function update(AskQuestionRequest $request, Question $question)
+    public function update(Request $request, Question $question)
     {
-        $this->authorize("update", $question);
-
-        $question->update($request->only('title', 'body'));
+        dd($request->all(), $question);
+        $question->update($request->only('body'));
 
         if ($request->expectsJson())
         {
@@ -106,17 +127,6 @@ class QuestionsController extends Controller
      */
     public function destroy(Question $question)
     {
-        $this->authorize("delete", $question);
-
-        $question->delete();
-
-        if (request()->expectsJson())
-        {
-            return response()->json([
-                'message' => "Your question has been deleted."
-            ]);
-        }
-
-        return redirect('/questions')->with('success', "Your question has been deleted.");
+        return $question->delete();
     }
 }

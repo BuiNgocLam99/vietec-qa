@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\RegisterFormRequest;
 use App\Models\Question;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
@@ -21,7 +22,7 @@ class RegisterController extends Controller
         return view('auth.register');
     }
 
-    public function store(Request $request)
+    public function store(RegisterFormRequest $request)
     {
         $data = $request->validate([
             'username' => ['required', 'string', 'max:255', 'unique:users'],
@@ -38,7 +39,8 @@ class RegisterController extends Controller
         ]);
 
         Auth::login($user);
-        $questions = Question::with('user')->latest()->paginate(10);
-        return redirect()->route('index');
+
+        $url = url(route('index'));
+        return response()->json(['url' => $url]);
     }
 }
